@@ -5764,7 +5764,7 @@ local Library do
             Name = Data.Name or Data.name or "Slider",
             Flag = Data.Flag or Data.flag or Library:NextFlag(),
             Min = Data.Min or Data.min or 0,
-            Decimals = Data.Decimals or Data.decimals or 1,
+            Decimals = (Data.Decimals ~= nil and Data.Decimals) or Data.decimals or 1,
             Suffix = Data.Suffix or Data.suffix or "",
             Max = Data.Max or Data.max or 100,
             Default = Data.Default or Data.Default or 0,

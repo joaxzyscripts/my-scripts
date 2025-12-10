@@ -728,29 +728,23 @@ local Library do
         local Multiplier = 1 / (Float or 1)
         return MathFloor(Number * Multiplier) / Multiplier
     end
-
-    Library.Thread = function(self, Function)
-        local NewThread = coroutine.create(Function)
-        
-        coroutine.wrap(function()
-            coroutine.resume(NewThread)
-        end)()
-
-        TableInsert(self.Threads, NewThread)
-        return NewThread
+Library.SafeCall = function(self, Function, ...)
+    local Arguments = { ... }
+    local function handler(err)
+        print("[LIB ERROR]", err)
+        print(debug.traceback())
     end
-    
-    Library.SafeCall = function(self, Function, ...)
-        local Arguements = { ... }
-        local Success, Result = pcall(Function, TableUnpack(Arguements))
+    local Success, Result = xpcall(function()
+        return Function(table.unpack(Arguments))
+    end, handler)
 
-        if not Success then
-            warn(Result)
-            return false
-        end
-
-        return Success
+    if not Success then
+        return false
     end
+
+    return Success
+end
+
 
     Library.Connect = function(self, Event, Callback, Name)
         Name = Name or StringFormat("Connection%s%s", self.UnnamedConnections + 1, HttpService:GenerateGUID(false))

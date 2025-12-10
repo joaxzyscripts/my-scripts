@@ -728,23 +728,29 @@ local Library do
         local Multiplier = 1 / (Float or 1)
         return MathFloor(Number * Multiplier) / Multiplier
     end
-Library.SafeCall = function(self, Function, ...)
-    local Arguments = { ... }
-    local function handler(err)
-        print("[LIB ERROR]", err)
-        print(debug.traceback())
+
+    Library.Thread = function(self, Function)
+        local NewThread = coroutine.create(Function)
+        
+        coroutine.wrap(function()
+            coroutine.resume(NewThread)
+        end)()
+
+        TableInsert(self.Threads, NewThread)
+        return NewThread
     end
-    local Success, Result = xpcall(function()
-        return Function(table.unpack(Arguments))
-    end, handler)
+    
+    Library.SafeCall = function(self, Function, ...)
+        local Arguements = { ... }
+        local Success, Result = pcall(Function, TableUnpack(Arguements))
 
-    if not Success then
-        return false
+        if not Success then
+            warn(Result)
+            return false
+        end
+
+        return Success
     end
-
-    return Success
-end
-
 
     Library.Connect = function(self, Event, Callback, Name)
         Name = Name or StringFormat("Connection%s%s", self.UnnamedConnections + 1, HttpService:GenerateGUID(false))
@@ -5758,7 +5764,7 @@ end
             Name = Data.Name or Data.name or "Slider",
             Flag = Data.Flag or Data.flag or Library:NextFlag(),
             Min = Data.Min or Data.min or 0,
-            Decimals = (Data.Decimals ~= nil and Data.Decimals) or Data.decimals or 1,
+            Decimals = Data.Decimals or Data.decimals or 1,
             Suffix = Data.Suffix or Data.suffix or "",
             Max = Data.Max or Data.max or 100,
             Default = Data.Default or Data.Default or 0,
@@ -6237,7 +6243,5 @@ end
         return SettingsPage
     end
 end
-Library:Notification("Loaded!", "Menu took "..string.format("%.4f", os.clock() - LoadTick).." seconds to load", 5)
-
 getgenv().Library = Library
 return Library
